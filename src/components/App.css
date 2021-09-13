@@ -1,0 +1,53 @@
+html,
+body,
+.initClass {
+  height: 100vh;
+  background-color: #eee;
+  padding: 1rem;
+}
+
+.menu {
+  padding-bottom: 2rem;
+}
+
+/* Messages */
+.messages {
+  height: 62vh ;
+  overflow-y: scroll;
+  max-width: inherit !important;
+}
+
+/* .messages_progress {
+  height: 58vh;
+  overflow-y: scroll;
+} */
+
+/* MessagesForm */
+.message_form {
+  position: fixed !important;
+  bottom: 1rem;
+  margin-left: 320px !important;
+  left: 0;
+  right: 1rem;
+  z-index: 200;
+}
+
+/* Message Component */
+.message_self{
+  border-left: 3px solid orange;
+  padding-left: 8px;
+}
+
+.message_other{
+  border-left: 3px solid lightgreen;
+  padding-left: 8px;
+}
+
+.message_image{
+  padding: 1rem;
+}
+
+/* Progress Bar */
+.progress_bar {
+  margin: 0.3rem 0 0 0 !important;
+}
