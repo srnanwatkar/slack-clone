@@ -8,13 +8,15 @@ import ProgressBar from "./ProgressBar";
 function MessagesForm() {
 
     const messageRef = appFirebase.database().ref('messages');
+    const privateMessageRef = appFirebase.database().ref('privateMessages');
     const [typedMessage, handleTypedMessages] = useState('');
     const [modal, handleModalState] = useState(false);
     const [percentUpload, handlePercentUpload] = useState(0);
     const [uploadState, handleUploadState] = useState('');
 
     const user = useSelector(state => state.user_reducer.currentUser);
-    const channelId = useSelector(state => state.user_reducer.currentChannel.id);
+    const channelId = useSelector(state => state.channel_reducer.currentChannel.id);
+    const privateChannel = useSelector(state => state.channel_reducer.isPrivateChannel);
 
     const handleSendMessage = () => {
         /* Handle message send */
@@ -29,7 +31,10 @@ function MessagesForm() {
                 }
             }
 
-            messageRef.child(channelId).push().set(message).then(() => {
+            /* Get the reference for private or group message reference */
+            const ref = getMessageRef();
+
+            ref.child(channelId).push().set(message).then(() => {
                 handleTypedMessages('');
                 /* Message Sent to Firebase */
                 console.log('Message sent to server');
@@ -39,6 +44,10 @@ function MessagesForm() {
         } else {
             console.log('Check if channel id is selected or not. Any message typed or nor')
         }
+    }
+
+    const getMessageRef = () => {
+        return privateChannel ? privateMessageRef : messageRef;
     }
 
 

@@ -13,23 +13,35 @@ function Messages() {
     const [searchedText, handleSearchedText] = useState('');
     const [searchedResults, handleSearchedResults] = useState([]);
     const [searchLoading, handleSearchLoading] = useState(false);
-    const messageRef = appFirebase.database().ref('messages');
-    const channelId = useSelector(state => state.user_reducer.currentChannel.id);
-    const user = useSelector(state => state.user_reducer.currentUser);
 
+    const messageRef = appFirebase.database().ref('messages');
+    const privateMessageRef = appFirebase.database().ref('privateMessages');
+
+    const channelId = useSelector(state => state.channel_reducer.currentChannel.id);
+    const user = useSelector(state => state.user_reducer.currentUser);
+    const privateChannel = useSelector(state => state.channel_reducer.isPrivateChannel);
 
     const tempMessages = [];
+
     useEffect(() => {
         /* Function for retrieving the message wrt channelId from firebase */
         if (channelId) {
             handleLoadedMessage([]);
-            messageRef.child(channelId).on('child_added', snap => {
+
+            /* Get the reference for private or group message reference */
+            const ref = getMessageRef();
+
+            ref.child(channelId).on('child_added', snap => {
                 tempMessages.push(snap.val())
                 handleLoadedMessage(() => tempMessages);
             });
         }
 
     }, [JSON.stringify(tempMessages), channelId]);
+
+    const getMessageRef = () => {
+        return privateChannel ? privateMessageRef : messageRef;
+    }
 
     useEffect(() => {
         const getUniqueUserCount = loadedMessages.reduce((acc, message) => {

@@ -10,13 +10,22 @@ function FileModal(props) {
     const [file, handleFileChange] = useState(null);
     const storageRef = appFirebase.storage().ref();
     const messageRef = appFirebase.database().ref('messages');
+    const privateMessageRef = appFirebase.database().ref('privateMessages');
 
-    const channelId = useSelector(state => state.user_reducer.currentChannel.id);
+    const channelId = useSelector(state => state.channel_reducer.currentChannel.id);
+    const privateChannel = useSelector(state => state.channel_reducer.isPrivateChannel);
     const user = useSelector(state => state.user_reducer.currentUser);
 
-    const filePath = `chat/path/${uuidv4()}.jpg`;
-
+    const filePathName = `${uuidv4()}.jpg`;
     const fileType = ['image/jpeg', 'image/png']
+
+    const getFilePath = () => {
+        if (privateChannel) {
+            return `chat/private-${channelId}/` + filePathName;
+        } else {
+            return `chat/path/` + filePathName;
+        }
+    }
 
     const sendFile = (e) => {
         e.preventDefault();
@@ -24,7 +33,7 @@ function FileModal(props) {
         if (file !== null && channelId !== null) {
             if (fileType.includes(mime.lookup(file.name))) {
                 const metadata = { contentType: mime.lookup(file.name) };
-                const uploadTask = storageRef.child(filePath).put(file, metadata);
+                const uploadTask = storageRef.child(getFilePath()).put(file, metadata);
 
                 /* Uploading State */
                 props.uploadState('uploading');
@@ -60,7 +69,10 @@ function FileModal(props) {
                 }
             }
 
-            messageRef.child(channelId).push().set(message).then(() => {
+            /* Get the reference for private or group message reference */
+            const ref = getMessageRef();
+
+            ref.child(channelId).push().set(message).then(() => {
                 handleFileChange(null);
                 /* Uploading State */
                 props.uploadState('done')
@@ -71,6 +83,10 @@ function FileModal(props) {
                 console.log('error while sending the file', err);
             });
         }
+    }
+
+    const getMessageRef = () => {
+        return privateChannel ? privateMessageRef : messageRef;
     }
 
     return (

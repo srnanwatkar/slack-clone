@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button, Form, Icon, Input, Menu, Modal } from "semantic-ui-react";
-import { LOADER_STATE, SET_CHANNEL_ID } from "../../actions/types";
+import { LOADER_STATE, SET_CHANNEL_ID, SET_PRIVATE_CHANNEL } from "../../actions/types";
 import appFirebase from "../../firebase";
 
 function Channels() {
@@ -65,6 +65,12 @@ function Channels() {
             type: SET_CHANNEL_ID,
             payload: { id: channel.id, name: channel.name }
         })
+
+        /* Set Private Channel */
+        dispatch({
+            type: SET_PRIVATE_CHANNEL,
+            payload: false
+        });
     }
 
     const renderChannels = () => {

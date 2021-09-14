@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Icon, Menu } from "semantic-ui-react";
+import { SET_CHANNEL_ID, SET_PRIVATE_CHANNEL } from "../../actions/types";
 import appFirebase from "../../firebase";
 
 function DirectMessages() {
@@ -10,6 +11,8 @@ function DirectMessages() {
     const userRef = appFirebase.database().ref('users');
     const connectedRef = appFirebase.database().ref('.info/connected');
     const presenceRef = appFirebase.database().ref('presence');
+
+    const dispatch = useDispatch();
 
     useEffect(() => {
         let loadedUsers = [];
@@ -43,12 +46,14 @@ function DirectMessages() {
                 addStatusToUser(snap.key);
             }
         });
+
         /* Child removed trigger */
         presenceRef.on('child_removed', snap => {
             if (currentUser.id !== snap.key) {
                 addStatusToUser(snap.key, false);
             }
         });
+
     }, [JSON.stringify(users)]);
 
     const addStatusToUser = (userId, connected = true) => {
@@ -63,6 +68,31 @@ function DirectMessages() {
 
     const isUserOnline = (user) => user.status === 'online';
 
+    const handleChangeUserChannel = (user) => {
+        const channelId = getChannelId(user.uid);
+
+        const channelData = {
+            id: channelId,
+            name: user.name
+        }
+
+        /* Set ChannelData */
+        dispatch({
+            type: SET_CHANNEL_ID,
+            payload: channelData
+        });
+
+        /* Set Private Channel */
+        dispatch({
+            type: SET_PRIVATE_CHANNEL,
+            payload: true
+        });
+    };
+
+    const getChannelId = (userId) => {
+        return userId < currentUser.id ? `${userId}/${currentUser.id}` : `${currentUser.id}/${userId}`;
+    }
+
     return (
         <Menu.Menu className='menu'>
             <Menu.Item>
@@ -72,7 +102,7 @@ function DirectMessages() {
             </Menu.Item>
             {
                 users.map(user => (
-                    <Menu.Item key={user.uid} onClick={() => { console.log(user) }} style={{ opacity: '0.7', fontStyle: 'italic' }}>
+                    <Menu.Item key={user.uid} onClick={() => handleChangeUserChannel(user)} style={{ opacity: '0.7', fontStyle: 'italic' }}>
                         <Icon name='circle' color={isUserOnline(user) ? 'green' : 'red'} />
                         @ {user.name}
                     </Menu.Item>

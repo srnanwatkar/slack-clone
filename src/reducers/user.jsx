@@ -2,7 +2,7 @@ import { CLEAR_USER, LOADER_STATE, SET_USER, SET_CHANNEL_ID } from "../actions/t
 
 const initialState = {
     currentUser: null,
-    currentChannel: { id: null, name: null },
+    // currentChannel: { id: null, name: null },
     isLoading: true
 }
 
@@ -29,11 +29,6 @@ const user_reducer = (state = initialState, action) => {
                 ...initialState,
                 currentUser: null,
                 isLoading: false
-            }
-        case SET_CHANNEL_ID:
-            return {
-                ...state,
-                currentChannel: action.payload
             }
         default:
             return state;
