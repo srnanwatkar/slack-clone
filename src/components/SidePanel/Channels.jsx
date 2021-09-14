@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Button, Form, Icon, Input, Menu, Modal } from "semantic-ui-react";
 import { LOADER_STATE, SET_CHANNEL_ID, SET_PRIVATE_CHANNEL } from "../../actions/types";
 import appFirebase from "../../firebase";
@@ -12,7 +12,10 @@ function Channels() {
     const [channelDetails, handleChannelDetails] = useState('');
     const [loadedChannels, handleChannelArray] = useState([]);
     const [modal, handleModalState] = useState(false);
-    const channelsRef = appFirebase.database().ref('channels')
+
+    const channelsRef = appFirebase.database().ref('channels');
+
+    const channelId = useSelector(state => state.channel_reducer.currentChannel.id);
 
     const handleChannelAdd = (event) => {
         event.preventDefault();
@@ -76,7 +79,7 @@ function Channels() {
     const renderChannels = () => {
         return loadedChannels.map((item) => {
             return (
-                <Menu.Item key={item.id} onClick={() => handleChannelId(item)} name={item.name} style={{ opacity: '0.7rem' }}>
+                <Menu.Item key={item.id} active={channelId === item.id} onClick={() => handleChannelId(item)} name={item.name} style={{ opacity: '0.7rem' }}>
                     # {item.name}
                 </Menu.Item>
             )

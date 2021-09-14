@@ -7,7 +7,10 @@ import appFirebase from "../../firebase";
 function DirectMessages() {
 
     const [users, handleUsers] = useState([]);
+    const [activeChannel, handleActiveChannel] = useState('');
     const currentUser = useSelector(state => state.user_reducer.currentUser);
+    const privateChannel = useSelector(state => state.channel_reducer.isPrivateChannel);
+
     const userRef = appFirebase.database().ref('users');
     const connectedRef = appFirebase.database().ref('.info/connected');
     const presenceRef = appFirebase.database().ref('presence');
@@ -87,6 +90,9 @@ function DirectMessages() {
             type: SET_PRIVATE_CHANNEL,
             payload: true
         });
+
+        /* Make active Channel */
+        handleActiveChannel(user.uid);
     };
 
     const getChannelId = (userId) => {
@@ -102,7 +108,7 @@ function DirectMessages() {
             </Menu.Item>
             {
                 users.map(user => (
-                    <Menu.Item key={user.uid} onClick={() => handleChangeUserChannel(user)} style={{ opacity: '0.7', fontStyle: 'italic' }}>
+                    <Menu.Item key={user.uid} active={user.uid === activeChannel && privateChannel} onClick={() => handleChangeUserChannel(user)} style={{ opacity: '0.7', fontStyle: 'italic' }}>
                         <Icon name='circle' color={isUserOnline(user) ? 'green' : 'red'} />
                         @ {user.name}
                     </Menu.Item>
