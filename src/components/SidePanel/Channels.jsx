@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Form, Icon, Input, Menu, Modal } from "semantic-ui-react";
+import { Button, Form, Icon, Input, Label, Menu, Modal } from "semantic-ui-react";
 import { LOADER_STATE, SET_CHANNEL_ID, SET_PRIVATE_CHANNEL } from "../../actions/types";
 import appFirebase from "../../firebase";
 
@@ -8,12 +8,15 @@ function Channels() {
 
     const dispatch = useDispatch();
 
+    const [channel, handleChannel] = useState(null);
     const [channelName, handleChannelName] = useState('');
     const [channelDetails, handleChannelDetails] = useState('');
     const [loadedChannels, handleChannelArray] = useState([]);
+    const [notifications, handleNotifications] = useState([]);
     const [modal, handleModalState] = useState(false);
 
     const channelsRef = appFirebase.database().ref('channels');
+    const messageRef = appFirebase.database().ref('messages');
 
     const channelId = useSelector(state => state.channel_reducer.currentChannel.id);
 
@@ -59,11 +62,48 @@ function Channels() {
         channelsRef.on('child_added', snap => {
             channelList.push(snap.val());
             handleChannelArray(() => channelList);
+            addNotificationListener(snap.key);
         });
 
     }, [JSON.stringify(loadedChannels)]);
 
+    const addNotificationListener = (channelId) => {
+        messageRef.child(channelId).on('value', snap => {
+            if (channel) {
+                handleChannelNotification(channelId, channel.id, notifications, snap)
+            }
+        });
+    }
+
+    const handleChannelNotification = (channelId, currentChannelId, notifications, snap) => {
+        let lastTotal = 0;
+        let index = notifications.findIndex(notification => notification.id === channelId);
+
+        if (index !== -1) {
+            if (channelId !== currentChannelId) {
+                lastTotal = notifications[index].total;
+
+                if (snap.numChildren() - lastTotal > 0) {
+                    notifications[index].count = snap.numChildren() - lastTotal;
+                }
+            }
+            notifications[index].lastKnownTotal = snap.numChildren();
+        } else {
+            notifications.push({
+                id: channelId,
+                total: snap.numChildren(),
+                lastKnownTotal: snap.numChildren(),
+                count: 0,
+            })
+        }
+
+        handleNotifications(notifications)
+    }
+
     const handleChannelId = (channel) => {
+        /* Reset Notification */
+        clearNotification();
+
         dispatch({
             type: SET_CHANNEL_ID,
             payload: { id: channel.id, name: channel.name }
@@ -74,12 +114,46 @@ function Channels() {
             type: SET_PRIVATE_CHANNEL,
             payload: false
         });
+
+        handleChannel(channel);
+    }
+
+    const clearNotification = () => {
+        let index = notifications.findIndex(notification => notification.id === channel.id);
+
+        if (index !== -1) {
+            let updatedNotification = [...notifications];
+            updatedNotification[index].total = notifications[index].lastKnownTotal;
+            updatedNotification[index].count = 0;
+
+            handleNotifications(updatedNotification);
+        }
+    }
+
+    const getNotificationCount = channel => {
+        let count = 0;
+
+        notifications.forEach(notification => {
+            if (notification.id === channel.id) {
+                count = notification.count
+            }
+        });
+
+        return count > 0 ? count : null;
     }
 
     const renderChannels = () => {
         return loadedChannels.map((item) => {
             return (
                 <Menu.Item key={item.id} active={channelId === item.id} onClick={() => handleChannelId(item)} name={item.name} style={{ opacity: '0.7rem' }}>
+                    {
+                        getNotificationCount(item) && (
+                            <Label color='red'>
+                                {getNotificationCount(item)}
+                            </Label>
+                        )
+                    }
+
                     # {item.name}
                 </Menu.Item>
             )
